@@ -7,13 +7,16 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
-	<header>
-		<hgroup>
-			<h1>Twitter Chat</h1>
-			<h2>conversations had in the twitterverse</h2>
-		</hgroup>
-	</header>
-<%= yield %>
+	<div id="container">	
+		<header>
+			<hgroup>
+				<h1>Twitter Chat</h1>
+				<h2>conversations had in the twitterverse</h2>
+			</hgroup>
+		</header>
 
+		<%= yield %>
+		
+	</div>
 </body>
 </html>
