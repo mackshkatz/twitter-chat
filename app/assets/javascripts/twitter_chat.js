@@ -6,8 +6,10 @@ window.twitter_chat = {
 
 	bindEvents: function() {
 		$('.search-button').click(function() {
-			var search_query = $('.search-query').val();
-			twitter_chat.getTweets(search_query);
+			var raw_search = $('.search-query').val();
+			var formatted_search_tweet_id = twitter_chat.formatQuery(raw_search, '/');
+
+			twitter_chat.getTweets(formatted_search_tweet_id);
 		});
 	},
 
@@ -16,9 +18,16 @@ window.twitter_chat = {
 	// time, I have access to them
 	tweets_array: [],
 
-	getTweets: function(search_query) {
+	formatQuery: function(string_to_split, separator) {
+		var array_of_split_string = string_to_split.split(separator);
+		// var tweet_screen_name = array_of_split_string[array_of_split_string.length - 3];
+		var tweet_status_id = array_of_split_string[array_of_split_string.length - 1];
+		return tweet_status_id;
+	},
+
+	getTweets: function(formatted_search_tweet_id) {
 		$.ajax({
-			url: search_query,
+			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_search_tweet_id + "&include_entities=true",
 			success: function(response) {
 				// call function that builds up context
 				twitter_chat.buildContext(response);
@@ -49,10 +58,16 @@ window.twitter_chat = {
 
 		twitter_chat.tweets_array.push(context);
 
+		// check for user mentions, and if some exist, request all
+		// of those users' tweets, iterate over them and find any
+		// directed back at the original user
+
+
 		// pass it through template and append to DOM
 		$('.tweet-list').append(JST['pages/index'](context));
 	}
 
+	// .*?twitter.com/#!/(.*?)/status/(\d+)
 
 	// tweets = []
 
