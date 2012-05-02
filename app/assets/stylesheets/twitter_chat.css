@@ -1,0 +1,7 @@
+.tweet {
+	list-style: none;
+}
+
+.tweet h3 {
+	display: inline-block;
+}

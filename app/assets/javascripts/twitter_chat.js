@@ -11,32 +11,62 @@ window.twitter_chat = {
 		});
 	},
 
+	// populate this array each time I build up a context
+	// object, and this way if I need to order tweets by
+	// time, I have access to them
+	tweets_array: [],
+
 	getTweets: function(search_query) {
 		$.ajax({
 			url: search_query,
 			success: function(response) {
-				console.log(response)
-				// retrieve tweet and pull out necessary date for template
-				// pass it through template and append to DOM
+				// call function that builds up context
+				twitter_chat.buildContext(response);
+				
+				// if tweet is part of convo, request another tweet part of that convo
+				// if (response.in_reply_to_) {
+				// 	search_query = response.in_reply_to
+				// }
+
 			},
 			dataType: "jsonp",
-			complete: function(response) {
-				console.log("completed", response)
-				// if tweet is part of convo, request another tweet part of that convo
+			complete: function() {
+				
 			}
 		})
+	},
+
+	buildContext: function(response) {
+		// retrieved tweet and pulled out necessary data for template
+		var context = {
+			avatar: response.user.profile_image_url,
+			screen_name: response.user.screen_name,
+			real_name: response.user.name,
+			time: "", // figure out how to display time in terms of 'x minutes ago'
+			tweet_body: response.text,
+			tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id
+		};
+
+		twitter_chat.tweets_array.push(context);
+
+		// pass it through template and append to DOM
+		$('.tweet-list').append(JST['pages/index'](context));
 	}
 
-	// context: {
-	// 	time: "1",
-	// 	avatar: "",
-	// 	screen_name: "1",
-	// 	real_name: "1",
-	// 	tweet_body: "1",
-	// 	tweet_url: "1",
-	// }
 
-	// $('.tweet-list').append(JST['pages/index']("test"));
+	// tweets = []
+
+	// get_first_tweet -> data
+	// 	tweets.push data
+	// 	// data.user.screen_name
+	// 	data.entities.user_mentions.each
+	// 		get_all_tweets_for_user_in_timeframe(user.screen_name)
+	// 			examine the tweet to see if they mentioned the original user
+	// 			push tweet data into the tweets collection
+	// 			resort the tweets collection
+	// 			regeneration/reorder the html
+
+	// 		get_data_on_that_tweet -> other_data
 }
 
 $(document).ready(function() {
