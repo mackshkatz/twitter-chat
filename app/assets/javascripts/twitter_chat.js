@@ -5,6 +5,7 @@ window.twitter_chat = {
 	},
 
 	bindEvents: function() {
+		// use .on() instead
 		$('.search-button').click(function() {
 			var raw_search = $('.search-query').val();
 			var formatted_search_tweet_id = twitter_chat.formatQuery(raw_search, '/');
@@ -66,8 +67,6 @@ window.twitter_chat = {
 		// pass it through template and append to DOM
 		$('.tweet-list').append(JST['pages/index'](context));
 	}
-
-	// .*?twitter.com/#!/(.*?)/status/(\d+)
 
 	// tweets = []
 
