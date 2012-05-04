@@ -5,12 +5,10 @@ window.twitter_chat = {
 	},
 
 	bindEvents: function() {
-		// use .on() instead
-		$('.search-button').click(function() {
+		$('#container').on('click', '.search-button', function() {
 			var raw_search = $('.search-query').val();
 			var formatted_search_tweet_id = twitter_chat.formatQuery(raw_search, '/');
-
-			twitter_chat.getTweets(formatted_search_tweet_id);
+			twitter_chat.getTweet(formatted_search_tweet_id);
 		});
 	},
 
@@ -26,18 +24,12 @@ window.twitter_chat = {
 		return tweet_status_id;
 	},
 
-	getTweets: function(formatted_search_tweet_id) {
+	getTweet: function(formatted_search_tweet_id) {
 		$.ajax({
 			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_search_tweet_id + "&include_entities=true",
 			success: function(response) {
 				// call function that builds up context
 				twitter_chat.buildContext(response);
-				
-				// if tweet is part of convo, request another tweet part of that convo
-				// if (response.in_reply_to_) {
-				// 	search_query = response.in_reply_to
-				// }
-
 			},
 			dataType: "jsonp",
 			complete: function() {
@@ -47,28 +39,74 @@ window.twitter_chat = {
 	},
 
 	buildContext: function(response) {
-		// retrieved tweet and pulled out necessary data for template
-		var context = {
-			avatar: response.user.profile_image_url,
-			screen_name: response.user.screen_name,
-			real_name: response.user.name,
-			time: "", // figure out how to display time in terms of 'x minutes ago'
-			tweet_body: response.text,
-			tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id
-		};
+		// use this to compare against response and 
+		// make sure I'm not duplicating tweets on the page
+		var array_includes_tweet = _.include(twitter_chat.tweets_array, response);
+		if (!array_includes_tweet) {
+			twitter_chat.tweets_array.push(response);
 
-		twitter_chat.tweets_array.push(context);
+			// pull out necessary data for template
+			var context = {
+				avatar: response.user.profile_image_url,
+				screen_name: response.user.screen_name,
+				real_name: response.user.name,
+				time: "", // figure out how to display time in terms of 'x minutes ago'
+				tweet_body: response.text,
+				tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id
+			};
+
+			// pass it through template and append to DOM
+			$('.tweet-list').append(JST['pages/index'](context));
+		}
 
 		// check for user mentions, and if some exist, request all
 		// of those users' tweets, iterate over them and find any
 		// directed back at the original user
+		twitter_chat.retrieveConvo(response);
 
+		
 
-		// pass it through template and append to DOM
-		$('.tweet-list').append(JST['pages/index'](context));
+	},
+
+	retrieveConvo: function(original_tweet_response) {
+		console.log('entered retrieveConvo');
+		// https://api.twitter.com/1/statuses/show.json?id=197104866865315840&include_entities=true
+		var original_screen_name = original_tweet_response.user.screen_name;
+		if (original_tweet_response.entities.user_mentions.length) {
+			var user_mentions_count = original_tweet_response.entities.user_mentions.length;
+			for (var i = 0; i < user_mentions_count; i++) {
+				// get screen name from each mention
+				var mentioned_user_name = original_tweet_response.entities.user_mentions[i].screen_name;
+				// pull in their timeline
+				var user_timeline_url = "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + mentioned_user_name + "&count=200"
+				// go through each tweet and look for any user mentions to the original screen name
+				$.ajax({
+					url: user_timeline_url,
+					success: function(response) {
+						var array_of_user_tweets = response.length;
+						for (var i = 0; i < array_of_user_tweets; i++) {
+							var this_tweet = response[i];
+							if (this_tweet.entities.user_mentions.length) {
+								for (var j = 0; j < this_tweet.entities.user_mentions.length; j++) {
+									if ((this_tweet.entities.user_mentions[j].screen_name == original_screen_name) && (twitter_chat.tweets_array.length < 5)) {
+										// console.log("yar", this_tweet.entities.user_mentions[j].screen_name);
+										twitter_chat.getTweet(this_tweet.id_str)
+									} else {
+										console.log('hit maximum requests');
+									}
+								}
+							}
+						}
+					},
+					dataType: "jsonp"
+				})
+			}
+		} else {
+			console.log("there is no associated conversation");
+		}
 	}
 
-	// tweets = []
+	// https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=maxjkatz&count=200
 
 	// get_first_tweet -> data
 	// 	tweets.push data

@@ -7,7 +7,7 @@ body {
 	background: #666666;
 }
 
-.main {
+.app-header {
 	background: #d0d0d0;
 	position: absolute;
 	top: 20px;
@@ -15,7 +15,7 @@ body {
 	right: 0;
 }
 
-.main > hgroup {
+.app-header > hgroup {
 	width: 600px;
 	margin: 0 auto;
 }
