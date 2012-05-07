@@ -27,10 +27,9 @@ window.twitter_chat = {
 	getTweet: function(formatted_search_tweet_id) {
 		$.ajax({
 			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_search_tweet_id + "&include_entities=true",
-			success: function(response) {
+			success: twitter_chat.buildContext,
 				// call function that builds up context
-				twitter_chat.buildContext(response);
-			},
+				// twitter_chat.buildContext(response);
 			dataType: "jsonp",
 			complete: function() {
 				
@@ -42,6 +41,12 @@ window.twitter_chat = {
 		// use this to compare against response and 
 		// make sure I'm not duplicating tweets on the page
 		var array_includes_tweet = _.include(twitter_chat.tweets_array, response);
+
+
+		// ^Don't just save an array of tweets, save an array of tweet_id_str and
+		// check if the array includes a certain id_str instead of the entire response
+
+
 		if (!array_includes_tweet) {
 			twitter_chat.tweets_array.push(response);
 
@@ -52,7 +57,7 @@ window.twitter_chat = {
 				real_name: response.user.name,
 				time: "", // figure out how to display time in terms of 'x minutes ago'
 				tweet_body: response.text,
-				tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id
+				tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id_str
 			};
 
 			// pass it through template and append to DOM
@@ -69,9 +74,17 @@ window.twitter_chat = {
 	},
 
 	retrieveConvo: function(original_tweet_response) {
+		// clean up var declarations, comma separated list on this line
+		// abstract out code of this function big time
+
+
+
 		console.log('entered retrieveConvo');
 		// https://api.twitter.com/1/statuses/show.json?id=197104866865315840&include_entities=true
 		var original_screen_name = original_tweet_response.user.screen_name;
+		if (!original_tweet_response.entities.user_mentions.length) {
+			console.log("there is no associated conversation");
+		}
 		if (original_tweet_response.entities.user_mentions.length) {
 			var user_mentions_count = original_tweet_response.entities.user_mentions.length;
 			for (var i = 0; i < user_mentions_count; i++) {
@@ -83,12 +96,13 @@ window.twitter_chat = {
 				$.ajax({
 					url: user_timeline_url,
 					success: function(response) {
+						// just call another method
 						var array_of_user_tweets = response.length;
 						for (var i = 0; i < array_of_user_tweets; i++) {
 							var this_tweet = response[i];
 							if (this_tweet.entities.user_mentions.length) {
 								for (var j = 0; j < this_tweet.entities.user_mentions.length; j++) {
-									if ((this_tweet.entities.user_mentions[j].screen_name == original_screen_name) && (twitter_chat.tweets_array.length < 5)) {
+									if ((this_tweet.entities.user_mentions[j].screen_name === original_screen_name) && (twitter_chat.tweets_array.length < 5)) {
 										// console.log("yar", this_tweet.entities.user_mentions[j].screen_name);
 										twitter_chat.getTweet(this_tweet.id_str)
 									} else {
@@ -99,10 +113,8 @@ window.twitter_chat = {
 						}
 					},
 					dataType: "jsonp"
-				})
+				});
 			}
-		} else {
-			console.log("there is no associated conversation");
 		}
 	}
 

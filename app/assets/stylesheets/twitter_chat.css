@@ -1,7 +1,3 @@
-html {
-	height: 100%;
-}
-
 body {
 	height: 100%;
 	background: #666666;
@@ -13,6 +9,8 @@ body {
 	top: 20px;
 	left: 0;
 	right: 0;
+	color: #fff;
+	text-shadow: 1px 1px #000;
 }
 
 .app-header > hgroup {
@@ -20,12 +18,19 @@ body {
 	margin: 0 auto;
 }
 
+.app-header h2 {
+	color: #4ea3f7;
+	text-shadow: none;
+}
+
 #container {
 	width: 600px;
 	height: 100%;
 	margin: 0 auto;
-	padding: 125px 50px 0;
+	padding: 125px 50px 50px;
 	background: #747474;
+	color: #e2e2e2;
+	text-shadow: 1px 1px #000;
 }
 
 .search-query {
@@ -69,7 +74,7 @@ body {
 .tweet {
 	list-style: none;
 	position: relative;
-	padding-bottom: 25px;
+	padding: 10px 10px 25px 20px;
 	border: 1px solid #1d1d1d;
 	background: rgb(153,153,153);
 	background: -moz-linear-gradient(top, rgba(153,153,153,1) 0%, rgba(102,102,102,1) 100%);
@@ -85,16 +90,65 @@ body {
 	border-top: none;
 }
 
+.tweet img {
+	margin-right: 20px;
+	box-shadow: 3px 4px #747474;
+	border-radius: 5px;
+	border: 1px solid #fff;
+}
+
 .tweet h3 {
 	display: inline-block;
+	margin: 0;
+	font-style: italic;
+}
+
+.tweet h3 span {
+	color: #b2b2b2;
+}
+
+.tweet p {
+	padding-top: 20px;
 }
 
 .tweet a {
 	position: absolute;
 	right: 5px;
 	bottom: 5px;
+	border-left: 30px solid #8f8f8f;
+	border-top: 30px solid transparent;
+	border-bottom: 30px solid transparent;
+	-webkit-transform: rotate(45deg);
+	height: 0;
+	margin-right: -9px;
+	margin-bottom: -24px;
+}
+
+.tweet a span {
+	display: block;
+	-webkit-transform: rotate(-45deg);
+	margin-left: -24px;
+	margin-top: -17px;
 }
 
 .time {
+	float: right;
+}
+
+footer {
+	padding: 10px;
+	border: 1px solid #1d1d1d;
+	margin-top: 20px;
+	background: rgb(153,153,153);
+	background: -moz-linear-gradient(top, rgba(153,153,153,1) 0%, rgba(102,102,102,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(153,153,153,1)), color-stop(100%,rgba(102,102,102,1)));
+	background: -webkit-linear-gradient(top, rgba(153,153,153,1) 0%,rgba(102,102,102,1) 100%);
+	background: -o-linear-gradient(top, rgba(153,153,153,1) 0%,rgba(102,102,102,1) 100%);
+	background: -ms-linear-gradient(top, rgba(153,153,153,1) 0%,rgba(102,102,102,1) 100%);
+	background: linear-gradient(top, rgba(153,153,153,1) 0%,rgba(102,102,102,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#999999', endColorstr='#666666',GradientType=0 );
+}
+
+footer span {
 	float: right;
 }
