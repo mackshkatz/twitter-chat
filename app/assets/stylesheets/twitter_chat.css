@@ -99,8 +99,9 @@ body {
 
 .tweet h3 {
 	display: inline-block;
-	margin: 0;
+	margin: 17px 0 0 0;
 	font-style: italic;
+
 }
 
 .tweet h3 span {
@@ -133,6 +134,8 @@ body {
 
 .time {
 	float: right;
+	color: #3ac83a;
+	font-size: 12px;
 }
 
 footer {

@@ -134,12 +134,33 @@ window.twitter_chat = {
 	},
 
 	formatTweetTime: function() {
-
 		console.log("format time", twitter_chat.formatted_tweets)
+		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
+		for (var i = 0; i < number_of_formatted_tweets; i++) {
+			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
+			// formatted_tweet_time stored as minutes
+			if (formatted_tweet_time > 40320) {
+				twitter_chat.formatted_tweets[i].time = "over a month ago"
+			} else if (formatted_tweet_time > 10080) {
+				twitter_chat.formatted_tweets[i].time = "over a week ago"
+			} else if (formatted_tweet_time > 1440) {
+				twitter_chat.formatted_tweets[i].time = "over a day ago"
+			} else if (formatted_tweet_time >= 120) {
+				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time / 60) + " hours ago"
+			} else if (formatted_tweet_time > 60) {
+				twitter_chat.formatted_tweets[i].time = "1 hour ago"
+			} else if (formatted_tweet_time >= 2) {
+				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago"
+			} else if (formatted_tweet_time > 1) {
+				twitter_chat.formatted_tweets[i].time = "1 minute ago"
+			} else if (formatted_tweet_time) {
+				twitter_chat.formatted_tweets[i].time = "just now"
+			}
+		}
+		console.log("format time2", twitter_chat.formatted_tweets);
 		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
 	}
 }
-
 
 $(document).ready(function() {
 	twitter_chat.init();
