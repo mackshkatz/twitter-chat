@@ -159,7 +159,7 @@ window.twitter_chat = {
 				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago"
 			} else if (formatted_tweet_time > 1) {
 				twitter_chat.formatted_tweets[i].time = "1 minute ago"
-			} else if (formatted_tweet_time) {
+			} else if (formatted_tweet_time < 1) {
 				twitter_chat.formatted_tweets[i].time = "just now"
 			}
 		}
