@@ -3,6 +3,7 @@ window.twitter_chat = {
 	tweets_in_conversation: [],
 	original_user_mentions: [],
 	original_screen_name: null,
+	original_tweet_time: null,
 	formatted_tweets: [],
 
 	init: function() {
@@ -33,10 +34,12 @@ window.twitter_chat = {
 	},
 
 	getRequestedTweet: function(formatted_tweet_id) {
-		console.log("entered getRequestedTweet");
 		$.ajax({
 			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_tweet_id + "&include_entities=true",
 			success: function(response) {
+				// use this to establish a time range around
+				// this tweet to qualify as part of the convo
+				twitter_chat.original_tweet_time = (new Date(response.created_at)).valueOf();
 				var user_mentions = response.entities.user_mentions.length;
 				if (user_mentions) {
 					for (var i = 0; i < user_mentions; i++) {
@@ -60,7 +63,6 @@ window.twitter_chat = {
 	},
 
 	filterOriginalAuthorTimeline: function(response) {
-		console.log("entered filterOriginalAuthorTimeline");
 		// iterate over each tweet and any of them that mention
 		// the same screen_name as the original requested tweet
 		// push into 'tweets_in_conversation' array.
@@ -80,7 +82,6 @@ window.twitter_chat = {
 	},
 
 	getMentionedUserTimeline: function() {
-		console.log("entered getMentionedUserTimeline");
 		var total_user_mentions = twitter_chat.original_user_mentions.length;
 		for (var i = 0; i < total_user_mentions; i++) {
 			$.ajax({
@@ -92,7 +93,6 @@ window.twitter_chat = {
 	},
 
 	filterMentionedUserTimeline: function(response) {
-		console.log("entered filterMentionedUserTimeline");
 		var total_user_tweets = response.length;
 		for (var i = 0; i < total_user_tweets; i++) {
 			var this_tweet = response[i];
@@ -109,14 +109,13 @@ window.twitter_chat = {
 		twitter_chat.buildContext();
 	},
 
+	// 1000ms/1s * 60s/1min * 60min/1hour * 24hour/1day
+	// 86,400,000ms/day
+
 	buildContext: function() {
-		console.log(twitter_chat.tweets_in_conversation);
-		// reorder tweets_in_conversation from oldest
-		// to most recent based on created_at time
 		twitter_chat.tweets_in_conversation.sort(function(a, b) {
 			var tweet_time_a = new Date(a.created_at);
 			var tweet_time_b = new Date(b.created_at);
-
 			return tweet_time_a - tweet_time_b;
 		});
 
@@ -125,12 +124,18 @@ window.twitter_chat = {
 				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
 				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 				real_name: twitter_chat.tweets_in_conversation[i].user.name,
-				time: "", // figure out how to display time in terms of 'x minutes ago'
+				time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
 				tweet_body: twitter_chat.tweets_in_conversation[i].text,
-				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation.id_str
+				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 			}
 			twitter_chat.formatted_tweets.push(context);
 		}
+		twitter_chat.formatTweetTime();
+	},
+
+	formatTweetTime: function() {
+
+		console.log("format time", twitter_chat.formatted_tweets)
 		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
 	}
 }
