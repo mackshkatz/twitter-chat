@@ -1,5 +1,10 @@
 window.twitter_chat = {
 
+	tweets_in_conversation: [],
+	original_user_mentions: [],
+	original_screen_name: null,
+	formatted_tweets: [],
+
 	init: function() {
 		this.bindEvents();
 	},
@@ -7,131 +12,121 @@ window.twitter_chat = {
 	bindEvents: function() {
 		$('#container').on('click', '.search-button', function() {
 			var raw_search = $('.search-query').val();
-			var formatted_search_tweet_id = twitter_chat.formatQuery(raw_search, '/');
-			twitter_chat.getTweet(formatted_search_tweet_id);
+			var formatted_search_info = twitter_chat.formatQuery(raw_search, '/');
+			var formatted_tweet_id = formatted_search_info.tweet_id;
+			var formatted_screen_name = formatted_search_info.screen_name;
+
+			twitter_chat.original_screen_name = formatted_screen_name;
+			twitter_chat.getRequestedTweet(formatted_tweet_id);
+			twitter_chat.getOriginalAuthorTimeline(formatted_screen_name);
 		});
 	},
 
-	// populate this array each time I build up a context
-	// object, and this way if I need to order tweets by
-	// time, I have access to them
-	tweets_array: [],
-
 	formatQuery: function(string_to_split, separator) {
 		var array_of_split_string = string_to_split.split(separator);
-		// var tweet_screen_name = array_of_split_string[array_of_split_string.length - 3];
-		var tweet_status_id = array_of_split_string[array_of_split_string.length - 1];
-		return tweet_status_id;
+		var screen_name = array_of_split_string[array_of_split_string.length - 3];
+		var tweet_id = array_of_split_string[array_of_split_string.length - 1];
+		return {
+			'screen_name': screen_name,
+			'tweet_id': tweet_id
+		}
 	},
 
-	getTweet: function(formatted_search_tweet_id) {
+	getRequestedTweet: function(formatted_tweet_id) {
+		console.log("entered getRequestedTweet");
 		$.ajax({
-			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_search_tweet_id + "&include_entities=true",
-			success: twitter_chat.buildContext,
-				// call function that builds up context
-				// twitter_chat.buildContext(response);
-			dataType: "jsonp",
-			complete: function() {
-				
-			}
+			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_tweet_id + "&include_entities=true",
+			success: function(response) {
+				var user_mentions = response.entities.user_mentions.length;
+				if (user_mentions) {
+					for (var i = 0; i < user_mentions; i++) {
+						twitter_chat.original_user_mentions.push(response.entities.user_mentions[i].screen_name);
+					}
+				}
+				// after original_user_mentions is built up, get
+				// all of the mentioned users' timelines
+				twitter_chat.getMentionedUserTimeline(twitter_chat.original_user_mentions);
+			},
+			dataType: "jsonp"
 		})
 	},
 
-	buildContext: function(response) {
-		// use this to compare against response and 
-		// make sure I'm not duplicating tweets on the page
-		var array_includes_tweet = _.include(twitter_chat.tweets_array, response);
-
-
-		// ^Don't just save an array of tweets, save an array of tweet_id_str and
-		// check if the array includes a certain id_str instead of the entire response
-
-
-		if (!array_includes_tweet) {
-			twitter_chat.tweets_array.push(response);
-
-			// pull out necessary data for template
-			var context = {
-				avatar: response.user.profile_image_url,
-				screen_name: response.user.screen_name,
-				real_name: response.user.name,
-				time: "", // figure out how to display time in terms of 'x minutes ago'
-				tweet_body: response.text,
-				tweet_url: "https://twitter.com/#!/" + this.screen_name + "/status/" + response.id_str
-			};
-
-			// pass it through template and append to DOM
-			$('.tweet-list').append(JST['pages/index'](context));
-		}
-
-		// check for user mentions, and if some exist, request all
-		// of those users' tweets, iterate over them and find any
-		// directed back at the original user
-		twitter_chat.retrieveConvo(response);
-
-		
-
+	getOriginalAuthorTimeline: function(formatted_screen_name) {
+		$.ajax({
+			url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + formatted_screen_name + "&count=200",
+			success: twitter_chat.filterOriginalAuthorTimeline,
+			dataType: "jsonp"
+		})
 	},
 
-	retrieveConvo: function(original_tweet_response) {
-		// clean up var declarations, comma separated list on this line
-		// abstract out code of this function big time
-
-
-
-		console.log('entered retrieveConvo');
-		// https://api.twitter.com/1/statuses/show.json?id=197104866865315840&include_entities=true
-		var original_screen_name = original_tweet_response.user.screen_name;
-		if (!original_tweet_response.entities.user_mentions.length) {
-			console.log("there is no associated conversation");
-		}
-		if (original_tweet_response.entities.user_mentions.length) {
-			var user_mentions_count = original_tweet_response.entities.user_mentions.length;
-			for (var i = 0; i < user_mentions_count; i++) {
-				// get screen name from each mention
-				var mentioned_user_name = original_tweet_response.entities.user_mentions[i].screen_name;
-				// pull in their timeline
-				var user_timeline_url = "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + mentioned_user_name + "&count=200"
-				// go through each tweet and look for any user mentions to the original screen name
-				$.ajax({
-					url: user_timeline_url,
-					success: function(response) {
-						// just call another method
-						var array_of_user_tweets = response.length;
-						for (var i = 0; i < array_of_user_tweets; i++) {
-							var this_tweet = response[i];
-							if (this_tweet.entities.user_mentions.length) {
-								for (var j = 0; j < this_tweet.entities.user_mentions.length; j++) {
-									if ((this_tweet.entities.user_mentions[j].screen_name === original_screen_name) && (twitter_chat.tweets_array.length < 5)) {
-										// console.log("yar", this_tweet.entities.user_mentions[j].screen_name);
-										twitter_chat.getTweet(this_tweet.id_str)
-									} else {
-										console.log('hit maximum requests');
-									}
-								}
-							}
-						}
-					},
-					dataType: "jsonp"
-				});
+	filterOriginalAuthorTimeline: function(response) {
+		console.log("entered filterOriginalAuthorTimeline");
+		// iterate over each tweet and any of them that mention
+		// the same screen_name as the original requested tweet
+		// push into 'tweets_in_conversation' array.
+		var total_user_tweets = response.length;
+		for (var i = 0; i < total_user_tweets; i++) {
+			var this_tweet = response[i];
+			// if (!this_tweet.entities.user_mentions.length) {
+			// 	return false;
+			// }
+			var total_user_mentions = this_tweet.entities.user_mentions.length;
+			for (var j = 0; j < total_user_mentions; j++) {
+				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.include(twitter_chat.tweets_in_conversation, this_tweet))) {
+					twitter_chat.tweets_in_conversation.push(this_tweet);
+				}
 			}
 		}
+	},
+
+	getMentionedUserTimeline: function() {
+		console.log("entered getMentionedUserTimeline");
+		var total_user_mentions = twitter_chat.original_user_mentions.length;
+		for (var i = 0; i < total_user_mentions; i++) {
+			$.ajax({
+				url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + twitter_chat.original_user_mentions[i] + "&count=200",
+				success: twitter_chat.filterMentionedUserTimeline,
+				dataType: "jsonp"
+			})
+		}
+	},
+
+	filterMentionedUserTimeline: function(response) {
+		console.log("entered filterMentionedUserTimeline");
+		var total_user_tweets = response.length;
+		for (var i = 0; i < total_user_tweets; i++) {
+			var this_tweet = response[i];
+			// if (!this_tweet.entities.user_mentions.length) {
+			// 	return false;
+			// }
+			var total_user_mentions = this_tweet.entities.user_mentions.length;
+			for (var j = 0; j < total_user_mentions; j++) {
+				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.include(twitter_chat.tweets_in_conversation, this_tweet))) {
+					twitter_chat.tweets_in_conversation.push(this_tweet);
+				}
+			}
+		}
+		twitter_chat.buildContext();
+	},
+
+	buildContext: function() {
+		console.log(twitter_chat.tweets_in_conversation);
+		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
+			var context = {
+				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
+				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
+				real_name: twitter_chat.tweets_in_conversation[i].user.name,
+				time: "", // figure out how to display time in terms of 'x minutes ago'
+				tweet_body: twitter_chat.tweets_in_conversation[i].text,
+				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation.id_str
+			}
+			// $('.tweet-list').append(JST['pages/index'](context));
+			twitter_chat.formatted_tweets.push(context);
+		}
+		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
 	}
-
-	// https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=maxjkatz&count=200
-
-	// get_first_tweet -> data
-	// 	tweets.push data
-	// 	// data.user.screen_name
-	// 	data.entities.user_mentions.each
-	// 		get_all_tweets_for_user_in_timeframe(user.screen_name)
-	// 			examine the tweet to see if they mentioned the original user
-	// 			push tweet data into the tweets collection
-	// 			resort the tweets collection
-	// 			regeneration/reorder the html
-
-	// 		get_data_on_that_tweet -> other_data
 }
+
 
 $(document).ready(function() {
 	twitter_chat.init();
