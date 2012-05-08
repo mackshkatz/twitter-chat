@@ -139,7 +139,13 @@ window.twitter_chat = {
 		for (var i = 0; i < number_of_formatted_tweets; i++) {
 			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
 			// formatted_tweet_time stored as minutes
-			if (formatted_tweet_time > 40320) {
+			if (formatted_tweet_time > 483840) {
+				twitter_chat.formatted_tweets[i].time = "over a year ago"
+			} else if (formatted_tweet_time > 241920) {
+				twitter_chat.formatted_tweets[i].time = "over 6 months ago"
+			} else if (formatted_tweet_time > 40320) {
+				twitter_chat.formatted_tweets[i].time = "over a month ago"
+			} else if (formatted_tweet_time > 40320) {
 				twitter_chat.formatted_tweets[i].time = "over a month ago"
 			} else if (formatted_tweet_time > 10080) {
 				twitter_chat.formatted_tweets[i].time = "over a week ago"
