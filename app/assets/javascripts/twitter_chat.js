@@ -111,6 +111,15 @@ window.twitter_chat = {
 
 	buildContext: function() {
 		console.log(twitter_chat.tweets_in_conversation);
+		// reorder tweets_in_conversation from oldest
+		// to most recent based on created_at time
+		twitter_chat.tweets_in_conversation.sort(function(a, b) {
+			var tweet_time_a = new Date(a.created_at);
+			var tweet_time_b = new Date(b.created_at);
+
+			return tweet_time_a - tweet_time_b;
+		});
+
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
 			var context = {
 				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
@@ -120,7 +129,6 @@ window.twitter_chat = {
 				tweet_body: twitter_chat.tweets_in_conversation[i].text,
 				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation.id_str
 			}
-			// $('.tweet-list').append(JST['pages/index'](context));
 			twitter_chat.formatted_tweets.push(context);
 		}
 		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
