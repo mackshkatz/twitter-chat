@@ -120,21 +120,23 @@ window.twitter_chat = {
 		});
 
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
-			var context = {
-				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
-				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
-				real_name: twitter_chat.tweets_in_conversation[i].user.name,
-				time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
-				tweet_body: twitter_chat.tweets_in_conversation[i].text,
-				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
+			// check if tweet time is within 1 day of original tweet time
+			if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
+				var context = {
+					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
+					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
+					real_name: twitter_chat.tweets_in_conversation[i].user.name,
+					time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
+					tweet_body: twitter_chat.tweets_in_conversation[i].text,
+					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
+				}
+				twitter_chat.formatted_tweets.push(context);
 			}
-			twitter_chat.formatted_tweets.push(context);
 		}
 		twitter_chat.formatTweetTime();
 	},
 
 	formatTweetTime: function() {
-		console.log("format time", twitter_chat.formatted_tweets)
 		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
 		for (var i = 0; i < number_of_formatted_tweets; i++) {
 			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
@@ -157,13 +159,12 @@ window.twitter_chat = {
 				twitter_chat.formatted_tweets[i].time = "1 hour ago"
 			} else if (formatted_tweet_time >= 2) {
 				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago"
-			} else if (formatted_tweet_time > 1) {
+			} else if (formatted_tweet_time >= 1) {
 				twitter_chat.formatted_tweets[i].time = "1 minute ago"
 			} else if (formatted_tweet_time < 1) {
 				twitter_chat.formatted_tweets[i].time = "just now"
 			}
 		}
-		console.log("format time2", twitter_chat.formatted_tweets);
 		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
 	}
 }
