@@ -112,7 +112,12 @@ body {
 	padding-top: 20px;
 }
 
-.tweet a {
+.tweet .user-mention {
+	color: #3198fa;
+	text-decoration: none;
+}
+
+.tweet > a {
 	position: absolute;
 	right: 5px;
 	bottom: 5px;
@@ -125,7 +130,7 @@ body {
 	margin-bottom: -24px;
 }
 
-.tweet a span {
+.tweet > a span {
 	display: block;
 	-webkit-transform: rotate(-45deg);
 	margin-left: -24px;

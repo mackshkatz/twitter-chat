@@ -64,7 +64,7 @@ window.twitter_chat = {
 
 	filterOriginalAuthorTimeline: function(response) {
 		// iterate over each tweet and any of them that mention
-		// the same screen_name as the original requested tweet
+		// the same screen_name(s) as the original requested tweet
 		// push into 'tweets_in_conversation' array.
 		var total_user_tweets = response.length;
 		for (var i = 0; i < total_user_tweets; i++) {
@@ -74,7 +74,7 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.include(twitter_chat.tweets_in_conversation, this_tweet))) {
+				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!(_.include(twitter_chat.tweets_in_conversation, this_tweet)))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -101,7 +101,7 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.include(twitter_chat.tweets_in_conversation, this_tweet))) {
+				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!(_.include(twitter_chat.tweets_in_conversation, this_tweet)))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -121,22 +121,24 @@ window.twitter_chat = {
 
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
 			// check if tweet time is within 1 day of original tweet time
-			if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
-				var context = {
-					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
-					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
-					real_name: twitter_chat.tweets_in_conversation[i].user.name,
-					time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
-					tweet_body: twitter_chat.tweets_in_conversation[i].text,
-					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
-				}
-				twitter_chat.formatted_tweets.push(context);
+			// if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
+			var context = {
+				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
+				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
+				real_name: twitter_chat.tweets_in_conversation[i].user.name,
+				time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
+				tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace( /@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
+				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 			}
+			twitter_chat.formatted_tweets.push(context);
+			// }
 		}
 		twitter_chat.formatTweetTime();
 	},
 
 	formatTweetTime: function() {
+		// possibly break out the big if statement into
+		// something like 'is between'
 		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
 		for (var i = 0; i < number_of_formatted_tweets; i++) {
 			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
