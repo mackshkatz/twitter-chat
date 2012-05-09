@@ -74,7 +74,7 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!(_.include(twitter_chat.tweets_in_conversation, this_tweet)))) {
+				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -101,7 +101,7 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!(_.include(twitter_chat.tweets_in_conversation, this_tweet)))) {
+				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name)) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -127,7 +127,7 @@ window.twitter_chat = {
 				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 				real_name: twitter_chat.tweets_in_conversation[i].user.name,
 				time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
-				tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace( /@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
+				tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
 				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 			}
 			twitter_chat.formatted_tweets.push(context);
@@ -138,7 +138,7 @@ window.twitter_chat = {
 
 	formatTweetTime: function() {
 		// possibly break out the big if statement into
-		// something like 'is between'
+		// something like 'isBetween'
 		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
 		for (var i = 0; i < number_of_formatted_tweets; i++) {
 			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
@@ -147,8 +147,8 @@ window.twitter_chat = {
 				twitter_chat.formatted_tweets[i].time = "over a year ago"
 			} else if (formatted_tweet_time > 241920) {
 				twitter_chat.formatted_tweets[i].time = "over 6 months ago"
-			} else if (formatted_tweet_time > 40320) {
-				twitter_chat.formatted_tweets[i].time = "over a month ago"
+			} else if (formatted_tweet_time > 120960) {
+				twitter_chat.formatted_tweets[i].time = "over 3 months ago"
 			} else if (formatted_tweet_time > 40320) {
 				twitter_chat.formatted_tweets[i].time = "over a month ago"
 			} else if (formatted_tweet_time > 10080) {
