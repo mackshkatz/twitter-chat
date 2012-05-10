@@ -10,3 +10,4 @@
 //= require_tree ../templates
 //= require_tree .
 //= require underscore
+//= require timeago

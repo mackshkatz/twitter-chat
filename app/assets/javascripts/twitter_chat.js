@@ -12,6 +12,7 @@ window.twitter_chat = {
 
 	bindEvents: function() {
 		$('#container').on('click', '.search-button', function() {
+			$('.loading-layer, .loading-icon').show();
 			var raw_search = $('.search-query').val();
 			var formatted_search_info = twitter_chat.formatQuery(raw_search, '/');
 			var formatted_tweet_id = formatted_search_info.tweet_id;
@@ -129,8 +130,12 @@ window.twitter_chat = {
 					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 					real_name: twitter_chat.tweets_in_conversation[i].user.name,
 					time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
+					// (new Date(twitter_chat.tweets_in_conversation[i].created_at).toISOString)
 					tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
 					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
+				}
+				if ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf() === twitter_chat.original_tweet_time) {
+					context.li_class = "original-tweet"; 
 				}
 				twitter_chat.formatted_tweets.push(context);
 			}
@@ -177,6 +182,7 @@ window.twitter_chat = {
 		twitter_chat.getMentionedUserTimelineReceived += 1;
 		if (twitter_chat.getMentionedUserTimelineReceived >= twitter_chat.original_user_mentions.length) {
 			twitter_chat.buildContext();
+			$('.loading-layer, .loading-icon').hide();
 			$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
 		}
 	}
@@ -184,4 +190,5 @@ window.twitter_chat = {
 
 $(document).ready(function() {
 	twitter_chat.init();
+	// jQuery("abbr.timeago").timeago();
 });

@@ -155,10 +155,49 @@ body {
 	color: #ffffff;
 }
 
+.original-tweet {
+	box-shadow: inset 0 0 5px rgba(0, 0, 255, 1);
+	overflow: hidden;
+}
+
+.original-tweet > a {
+	box-shadow: 0 0 5px rgba(0, 0, 255, 1)
+}
+
 .time {
 	float: right;
 	color: #3ac83a;
 	font-size: 12px;
+}
+
+.loading-layer {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: rgba(39, 40, 34, .4);
+	display: none;
+}
+
+.loading-icon {
+	background-color: rgba(0,0,0,0);
+	border:5px solid rgba(0,183,229,0.9);
+	opacity:.9;
+	border-top:5px solid rgba(0,0,0,0);
+	border-left:5px solid rgba(0,0,0,0);
+	border-radius:50px;
+	box-shadow: 0 0 35px #2187e7;
+	width:50px;
+	height:50px;
+	margin:15px auto;
+	-webkit-animation: spinner 1s infinite linear;
+	display: none;
+}
+
+@-webkit-keyframes spinner {
+	0% { -webkit-transform:rotate(0deg); }
+	100% { -webkit-transform:rotate(360deg); }
 }
 
 footer {
