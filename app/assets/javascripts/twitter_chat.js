@@ -74,7 +74,7 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name))) {
+				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -86,7 +86,11 @@ window.twitter_chat = {
 		for (var i = 0; i < total_user_mentions; i++) {
 			$.ajax({
 				url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + twitter_chat.original_user_mentions[i] + "&count=200",
-				success: twitter_chat.filterMentionedUserTimeline,
+				success: function(response) {
+					twitter_chat.filterMentionedUserTimeline(response);
+					twitter_chat.maybeRenderTweets();
+				},
+				error: twitter_chat.maybeRenderTweets,
 				dataType: "jsonp"
 			})
 		}
@@ -101,12 +105,11 @@ window.twitter_chat = {
 			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name)) {
+				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
 		}
-		twitter_chat.buildContext();
 	},
 
 	// 1000ms/1s * 60s/1min * 60min/1hour * 24hour/1day
@@ -118,19 +121,18 @@ window.twitter_chat = {
 			var tweet_time_b = new Date(b.created_at);
 			return tweet_time_a - tweet_time_b;
 		});
-
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
 			// check if tweet time is within 1 day of original tweet time
 			// if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
-			var context = {
-				avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
-				screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
-				real_name: twitter_chat.tweets_in_conversation[i].user.name,
-				time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
-				tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
-				tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
-			}
-			twitter_chat.formatted_tweets.push(context);
+				var context = {
+					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
+					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
+					real_name: twitter_chat.tweets_in_conversation[i].user.name,
+					time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
+					tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
+					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
+				}
+				twitter_chat.formatted_tweets.push(context);
 			// }
 		}
 		twitter_chat.formatTweetTime();
@@ -140,34 +142,43 @@ window.twitter_chat = {
 		// possibly break out the big if statement into
 		// something like 'isBetween'
 		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
+
 		for (var i = 0; i < number_of_formatted_tweets; i++) {
 			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
 			// formatted_tweet_time stored as minutes
 			if (formatted_tweet_time > 483840) {
-				twitter_chat.formatted_tweets[i].time = "over a year ago"
+				twitter_chat.formatted_tweets[i].time = "over a year ago";
 			} else if (formatted_tweet_time > 241920) {
-				twitter_chat.formatted_tweets[i].time = "over 6 months ago"
+				twitter_chat.formatted_tweets[i].time = "over 6 months ago";
 			} else if (formatted_tweet_time > 120960) {
-				twitter_chat.formatted_tweets[i].time = "over 3 months ago"
+				twitter_chat.formatted_tweets[i].time = "over 3 months ago";
 			} else if (formatted_tweet_time > 40320) {
-				twitter_chat.formatted_tweets[i].time = "over a month ago"
+				twitter_chat.formatted_tweets[i].time = "over a month ago";
 			} else if (formatted_tweet_time > 10080) {
-				twitter_chat.formatted_tweets[i].time = "over a week ago"
+				twitter_chat.formatted_tweets[i].time = "over a week ago";
 			} else if (formatted_tweet_time > 1440) {
-				twitter_chat.formatted_tweets[i].time = "over a day ago"
+				twitter_chat.formatted_tweets[i].time = "over a day ago";
 			} else if (formatted_tweet_time >= 120) {
-				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time / 60) + " hours ago"
+				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time / 60) + " hours ago";
 			} else if (formatted_tweet_time > 60) {
-				twitter_chat.formatted_tweets[i].time = "1 hour ago"
+				twitter_chat.formatted_tweets[i].time = "1 hour ago";
 			} else if (formatted_tweet_time >= 2) {
-				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago"
+				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago";
 			} else if (formatted_tweet_time >= 1) {
-				twitter_chat.formatted_tweets[i].time = "1 minute ago"
+				twitter_chat.formatted_tweets[i].time = "1 minute ago";
 			} else if (formatted_tweet_time < 1) {
-				twitter_chat.formatted_tweets[i].time = "just now"
+				twitter_chat.formatted_tweets[i].time = "just now";
 			}
 		}
-		$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
+	},
+
+	getMentionedUserTimelineReceived: 0,
+	maybeRenderTweets: function() {
+		twitter_chat.getMentionedUserTimelineReceived += 1;
+		if (twitter_chat.getMentionedUserTimelineReceived >= twitter_chat.original_user_mentions.length) {
+			twitter_chat.buildContext();
+			$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
+		}
 	}
 }
 

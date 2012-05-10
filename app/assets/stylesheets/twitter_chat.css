@@ -175,11 +175,12 @@ footer {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#999999', endColorstr='#666666',GradientType=0 );
 }
 
-footer small mark {
+footer small {
+	display: block;
+}
+
+footer small em {
 	color: #3198fa;
-	background: none;
-	font-style: normal;
-	font-weight: normal;
 }
 
 footer span {
