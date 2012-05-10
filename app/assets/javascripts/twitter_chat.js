@@ -123,7 +123,7 @@ window.twitter_chat = {
 		});
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
 			// check if tweet time is within 1 day of original tweet time
-			// if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
+			if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
 				var context = {
 					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
 					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
@@ -133,7 +133,7 @@ window.twitter_chat = {
 					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 				}
 				twitter_chat.formatted_tweets.push(context);
-			// }
+			}
 		}
 		twitter_chat.formatTweetTime();
 	},
