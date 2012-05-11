@@ -164,7 +164,7 @@ body {
 	box-shadow: 0 0 5px rgba(0, 0, 255, 1)
 }
 
-.time {
+.timeago {
 	float: right;
 	color: #3ac83a;
 	font-size: 12px;

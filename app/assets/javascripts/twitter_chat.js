@@ -20,7 +20,7 @@ window.twitter_chat = {
 
 			twitter_chat.original_screen_name = formatted_screen_name;
 			twitter_chat.getRequestedTweet(formatted_tweet_id);
-			twitter_chat.getOriginalAuthorTimeline(formatted_screen_name);
+			twitter_chat.getOriginalAuthorTimeline(formatted_screen_name, formatted_tweet_id);
 		});
 	},
 
@@ -55,9 +55,15 @@ window.twitter_chat = {
 		})
 	},
 
-	getOriginalAuthorTimeline: function(formatted_screen_name) {
+	getOriginalAuthorTimeline: function(formatted_screen_name, formatted_tweet_id) {
 		$.ajax({
-			url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + formatted_screen_name + "&count=200",
+			url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + formatted_screen_name + "&max_id=" + formatted_tweet_id + "&count=200",
+			success: twitter_chat.filterOriginalAuthorTimeline,
+			dataType: "jsonp"
+		});
+
+		$.ajax({
+			url: "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&screen_name=" + formatted_screen_name + "&since_id=" + formatted_tweet_id + "&count=200",
 			success: twitter_chat.filterOriginalAuthorTimeline,
 			dataType: "jsonp"
 		})
@@ -129,8 +135,8 @@ window.twitter_chat = {
 					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
 					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 					real_name: twitter_chat.tweets_in_conversation[i].user.name,
-					time: ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60),
-					// (new Date(twitter_chat.tweets_in_conversation[i].created_at).toISOString)
+					time: (new Date(twitter_chat.tweets_in_conversation[i].created_at)).toISOString(),
+					// ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60)
 					tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
 					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 				}
@@ -138,41 +144,6 @@ window.twitter_chat = {
 					context.li_class = "original-tweet"; 
 				}
 				twitter_chat.formatted_tweets.push(context);
-			}
-		}
-		twitter_chat.formatTweetTime();
-	},
-
-	formatTweetTime: function() {
-		// possibly break out the big if statement into
-		// something like 'isBetween'
-		var number_of_formatted_tweets = twitter_chat.formatted_tweets.length;
-
-		for (var i = 0; i < number_of_formatted_tweets; i++) {
-			var formatted_tweet_time = parseInt(twitter_chat.formatted_tweets[i].time);
-			// formatted_tweet_time stored as minutes
-			if (formatted_tweet_time > 483840) {
-				twitter_chat.formatted_tweets[i].time = "over a year ago";
-			} else if (formatted_tweet_time > 241920) {
-				twitter_chat.formatted_tweets[i].time = "over 6 months ago";
-			} else if (formatted_tweet_time > 120960) {
-				twitter_chat.formatted_tweets[i].time = "over 3 months ago";
-			} else if (formatted_tweet_time > 40320) {
-				twitter_chat.formatted_tweets[i].time = "over a month ago";
-			} else if (formatted_tweet_time > 10080) {
-				twitter_chat.formatted_tweets[i].time = "over a week ago";
-			} else if (formatted_tweet_time > 1440) {
-				twitter_chat.formatted_tweets[i].time = "over a day ago";
-			} else if (formatted_tweet_time >= 120) {
-				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time / 60) + " hours ago";
-			} else if (formatted_tweet_time > 60) {
-				twitter_chat.formatted_tweets[i].time = "1 hour ago";
-			} else if (formatted_tweet_time >= 2) {
-				twitter_chat.formatted_tweets[i].time = parseInt(twitter_chat.formatted_tweets[i].time) + " minutes ago";
-			} else if (formatted_tweet_time >= 1) {
-				twitter_chat.formatted_tweets[i].time = "1 minute ago";
-			} else if (formatted_tweet_time < 1) {
-				twitter_chat.formatted_tweets[i].time = "just now";
 			}
 		}
 	},
@@ -184,11 +155,11 @@ window.twitter_chat = {
 			twitter_chat.buildContext();
 			$('.loading-layer, .loading-icon').hide();
 			$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
+			jQuery("abbr.timeago").timeago();
 		}
 	}
 }
 
 $(document).ready(function() {
 	twitter_chat.init();
-	// jQuery("abbr.timeago").timeago();
 });
