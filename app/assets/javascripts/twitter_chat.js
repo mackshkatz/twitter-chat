@@ -46,11 +46,20 @@ window.twitter_chat = {
 					for (var i = 0; i < user_mentions; i++) {
 						twitter_chat.original_user_mentions.push(response.entities.user_mentions[i].screen_name);
 					}
+				} else if (user_mentions == 0) {
+					twitter_chat.tweets_in_conversation.push(response);
+					twitter_chat.maybeRenderTweets();
+					$('<li class="tweet no-convo"><p>No conversation exists for this tweet</p></li>').appendTo('.tweet-list');
 				}
 				// after original_user_mentions is built up, get
 				// all of the mentioned users' timelines
 				twitter_chat.getMentionedUserTimeline(twitter_chat.original_user_mentions);
 			},
+			// error: function(x,y,z) {
+			// 	console.log("jqXHR", x);
+			// 	console.log("textStatus", y);
+			// 	console.log("errorThrown", z);
+			// },
 			dataType: "jsonp"
 		})
 	},
