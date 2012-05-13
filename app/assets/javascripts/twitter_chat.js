@@ -135,7 +135,7 @@ window.twitter_chat = {
 		twitter_chat.tweets_in_conversation.sort(function(a, b) {
 			var tweet_time_a = new Date(a.created_at);
 			var tweet_time_b = new Date(b.created_at);
-			return tweet_time_a - tweet_time_b;
+			return tweet_time_b - tweet_time_a;
 		});
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
 			// check if tweet time is within 1 day of original tweet time
