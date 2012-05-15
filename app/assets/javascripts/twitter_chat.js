@@ -5,6 +5,8 @@ window.twitter_chat = {
 	original_screen_name: null,
 	original_tweet_time: null,
 	formatted_tweets: [],
+	$no_convo_message: $('<li class="tweet error-message"><p>No conversation exists for this tweet</p></li>'),
+	$error_message: $('<li class="tweet error-message"><p>An error has occurred</p></li>'),
 
 	init: function() {
 		this.bindEvents();
@@ -49,17 +51,17 @@ window.twitter_chat = {
 				} else if (user_mentions == 0) {
 					twitter_chat.tweets_in_conversation.push(response);
 					twitter_chat.maybeRenderTweets();
-					$('<li class="tweet no-convo"><p>No conversation exists for this tweet</p></li>').appendTo('.tweet-list');
+					twitter_chat.$no_convo_message.appendTo('.tweet-list');
 				}
 				// after original_user_mentions is built up, get
 				// all of the mentioned users' timelines
 				twitter_chat.getMentionedUserTimeline(twitter_chat.original_user_mentions);
 			},
-			// error: function(x,y,z) {
-			// 	console.log("jqXHR", x);
-			// 	console.log("textStatus", y);
-			// 	console.log("errorThrown", z);
-			// },
+			timeout: 10000,
+			error: function() {
+				$('.loading-layer, .loading-icon').hide();
+				twitter_chat.$error_message.appendTo('.tweet-list');
+			},
 			dataType: "jsonp"
 		})
 	},
