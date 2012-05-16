@@ -14,8 +14,6 @@ window.twitter_chat = {
 
 	bindEvents: function() {
 		$('#container').on('click', '#search-button', function() {
-			// $('#search-button').attr('disabled', 'disabled');
-			// $('#search-button span').css('display', 'none');
 			$('.loading-layer, .loading-icon').show();
 			var raw_search = $('#search-query').val();
 			var formatted_search_info = twitter_chat.formatQuery(raw_search, '/');
@@ -56,7 +54,7 @@ window.twitter_chat = {
 					for (var i = 0; i < user_mentions; i++) {
 						twitter_chat.original_user_mentions.push(response.entities.user_mentions[i].screen_name);
 					}
-				} else if (user_mentions == 0) {
+				} else if (user_mentions === 0) {
 					twitter_chat.tweets_in_conversation.push(response);
 					twitter_chat.maybeRenderTweets();
 					twitter_chat.$no_convo_message.appendTo('.tweet-list');
@@ -92,7 +90,7 @@ window.twitter_chat = {
 			var this_tweet = response[i];
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
+				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str === this_tweet.id_str;}))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -119,7 +117,7 @@ window.twitter_chat = {
 			var this_tweet = response[i];
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
-				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
+				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str === this_tweet.id_str;}))) {
 					twitter_chat.tweets_in_conversation.push(this_tweet);
 				}
 			}
@@ -158,6 +156,9 @@ window.twitter_chat = {
 			twitter_chat.buildContext();
 			$('.loading-layer, .loading-icon').hide();
 			$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
+			if (twitter_chat.formatted_tweets.length === 1) {
+				twitter_chat.$no_convo_message.appendTo('.tweet-list');
+			}
 			jQuery("abbr.timeago").timeago();
 		}
 	}

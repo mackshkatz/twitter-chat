@@ -18,10 +18,22 @@ feature "A user can submit a tweet url", do
 
 		end
 	end
+end
 
+feature "Home page" do
+	background do
+		visit root_path
+	end
+	
 	context "header of page" do
 		scenario "should have title" do
 			page.should have_content "Twitter Chat"
+		end
+	end
+
+	context "url" do
+		scenario "should be the root" do
+			current_path.should == root_path
 		end
 	end
 end
