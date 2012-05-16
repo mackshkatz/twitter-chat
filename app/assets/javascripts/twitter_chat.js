@@ -108,7 +108,6 @@ window.twitter_chat = {
 					twitter_chat.filterMentionedUserTimeline(response);
 					twitter_chat.maybeRenderTweets();
 				},
-				error: twitter_chat.maybeRenderTweets,
 				dataType: "jsonp"
 			})
 		}
