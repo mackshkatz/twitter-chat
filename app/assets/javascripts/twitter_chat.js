@@ -13,13 +13,16 @@ window.twitter_chat = {
 	},
 
 	bindEvents: function() {
-		$('#container').on('click', '.search-button', function() {
+		$('#container').on('click', '#search-button', function() {
+			// $('#search-button').attr('disabled', 'disabled');
+			// $('#search-button span').css('display', 'none');
 			$('.loading-layer, .loading-icon').show();
-			var raw_search = $('.search-query').val();
+			var raw_search = $('#search-query').val();
 			var formatted_search_info = twitter_chat.formatQuery(raw_search, '/');
 			var formatted_tweet_id = formatted_search_info.tweet_id;
 			var formatted_screen_name = formatted_search_info.screen_name;
 
+			twitter_chat.resetProperties();
 			twitter_chat.original_screen_name = formatted_screen_name;
 			twitter_chat.getRequestedTweet(formatted_tweet_id);
 			twitter_chat.getOriginalAuthorTimeline(formatted_screen_name, formatted_tweet_id);
@@ -36,12 +39,17 @@ window.twitter_chat = {
 		}
 	},
 
+	resetProperties: function() {
+		twitter_chat.getMentionedUserTimelineReceived = 0;
+		twitter_chat.tweets_in_conversation = [];
+		twitter_chat.formatted_tweets = [];
+		$('.tweet-list').children().remove();
+	},
+
 	getRequestedTweet: function(formatted_tweet_id) {
 		$.ajax({
 			url: "https://api.twitter.com/1/statuses/show.json?id=" + formatted_tweet_id + "&include_entities=true",
 			success: function(response) {
-				// use this to establish a time range around
-				// this tweet to qualify as part of the convo
 				twitter_chat.original_tweet_time = (new Date(response.created_at)).valueOf();
 				var user_mentions = response.entities.user_mentions.length;
 				if (user_mentions) {
@@ -53,8 +61,6 @@ window.twitter_chat = {
 					twitter_chat.maybeRenderTweets();
 					twitter_chat.$no_convo_message.appendTo('.tweet-list');
 				}
-				// after original_user_mentions is built up, get
-				// all of the mentioned users' timelines
 				twitter_chat.getMentionedUserTimeline(twitter_chat.original_user_mentions);
 			},
 			timeout: 10000,
@@ -81,15 +87,9 @@ window.twitter_chat = {
 	},
 
 	filterOriginalAuthorTimeline: function(response) {
-		// iterate over each tweet and any of them that mention
-		// the same screen_name(s) as the original requested tweet
-		// push into 'tweets_in_conversation' array.
 		var total_user_tweets = response.length;
 		for (var i = 0; i < total_user_tweets; i++) {
 			var this_tweet = response[i];
-			// if (!this_tweet.entities.user_mentions.length) {
-			// 	return false;
-			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
 				if ((_.include(twitter_chat.original_user_mentions, this_tweet.entities.user_mentions[j].screen_name)) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
@@ -117,9 +117,6 @@ window.twitter_chat = {
 		var total_user_tweets = response.length;
 		for (var i = 0; i < total_user_tweets; i++) {
 			var this_tweet = response[i];
-			// if (!this_tweet.entities.user_mentions.length) {
-			// 	return false;
-			// }
 			var total_user_mentions = this_tweet.entities.user_mentions.length;
 			for (var j = 0; j < total_user_mentions; j++) {
 				if ((this_tweet.entities.user_mentions[j].screen_name === twitter_chat.original_screen_name) && (!_.detect(twitter_chat.tweets_in_conversation, function(t) { return t.id_str == this_tweet.id_str;}))) {
@@ -129,9 +126,6 @@ window.twitter_chat = {
 		}
 	},
 
-	// 1000ms/1s * 60s/1min * 60min/1hour * 24hour/1day
-	// 86,400,000ms/day
-
 	buildContext: function() {
 		twitter_chat.tweets_in_conversation.sort(function(a, b) {
 			var tweet_time_a = new Date(a.created_at);
@@ -139,14 +133,13 @@ window.twitter_chat = {
 			return tweet_time_b - tweet_time_a;
 		});
 		for (var i = 0; i < twitter_chat.tweets_in_conversation.length; i++) {
-			// check if tweet time is within 1 day of original tweet time
+			// check if tweet time is within 1 day of original tweet time // 86,400,000ms/day
 			if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
 				var context = {
 					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
 					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 					real_name: twitter_chat.tweets_in_conversation[i].user.name,
 					time: (new Date(twitter_chat.tweets_in_conversation[i].created_at)).toISOString(),
-					// ((Date.now() - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) / 1000 / 60)
 					tweet_body: (twitter_chat.tweets_in_conversation[i].text).replace(/@([a-z0-9_]+)/gi, '<a class="user-mention" href="http://twitter.com/$1" target="_blank">@$1</a>'),
 					tweet_url: "https://twitter.com/#!/" + twitter_chat.tweets_in_conversation[i].user.screen_name + "/status/" + twitter_chat.tweets_in_conversation[i].id_str
 				}
