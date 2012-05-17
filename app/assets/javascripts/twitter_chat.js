@@ -5,6 +5,8 @@ window.twitter_chat = {
 	original_screen_name: null,
 	original_tweet_time: null,
 	formatted_tweets: [],
+	click_counter: 0,
+	previously_formatted_tweets: [],
 	$no_convo_message: $('<li class="tweet error-message"><p>No conversation exists for this tweet</p></li>'),
 	$error_message: $('<li class="tweet error-message"><p>An error has occurred</p></li>'),
 
@@ -14,12 +16,14 @@ window.twitter_chat = {
 
 	bindEvents: function() {
 		$('#container').on('click', '#search-button', function() {
+			twitter_chat.click_counter++;
 			$('.loading-layer, .loading-icon').show();
 			var raw_search = $('#search-query').val();
 			var formatted_search_info = twitter_chat.formatQuery(raw_search, '/');
 			var formatted_tweet_id = formatted_search_info.tweet_id;
 			var formatted_screen_name = formatted_search_info.screen_name;
 
+			twitter_chat.previously_formatted_tweets = twitter_chat.formatted_tweets;
 			twitter_chat.resetProperties();
 			twitter_chat.original_screen_name = formatted_screen_name;
 			twitter_chat.getRequestedTweet(formatted_tweet_id);
@@ -41,7 +45,7 @@ window.twitter_chat = {
 		twitter_chat.getMentionedUserTimelineReceived = 0;
 		twitter_chat.tweets_in_conversation = [];
 		twitter_chat.formatted_tweets = [];
-		$('.tweet-list').children().remove();
+		// $('.tweet-list').children().remove();
 	},
 
 	getRequestedTweet: function(formatted_tweet_id) {
@@ -134,6 +138,7 @@ window.twitter_chat = {
 			// check if tweet time is within 1 day of original tweet time // 86,400,000ms/day
 			if (Math.abs(twitter_chat.original_tweet_time - ((new Date(twitter_chat.tweets_in_conversation[i].created_at)).valueOf())) < 86400000 ) {
 				var context = {
+					id_str: twitter_chat.tweets_in_conversation[i].id_str,
 					avatar: twitter_chat.tweets_in_conversation[i].user.profile_image_url,
 					screen_name: twitter_chat.tweets_in_conversation[i].user.screen_name,
 					real_name: twitter_chat.tweets_in_conversation[i].user.name,
@@ -155,14 +160,59 @@ window.twitter_chat = {
 		if (twitter_chat.getMentionedUserTimelineReceived >= twitter_chat.original_user_mentions.length) {
 			twitter_chat.buildContext();
 			$('.loading-layer, .loading-icon').hide();
-			$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
-			if (twitter_chat.formatted_tweets.length === 1) {
-				twitter_chat.$no_convo_message.appendTo('.tweet-list');
+			// on click, take formatted_tweets, set it equal to
+			// previous_array_of_formatted_tweets, still reset
+			// everything inside of resetProperties, then before
+			// sending formatted_tweets through template engine,
+			// check if formatted_tweets is longer than previous_array_of_formatted_tweets,
+			// and if so, find which tweet isn't in there and only send that one through template engine
+			// push that new tweet onto previously_formatted_tweets and then set formatted_tweets = previously_formatted_tweets
+
+			var array_of_previous_tweet_ids = _.pluck(twitter_chat.previously_formatted_tweets, 'id_str');
+
+			twitter_chat.new_live_tweets = _.reject(twitter_chat.formatted_tweets, function(tweet) {
+				return _.include(array_of_previous_tweet_ids, tweet.id_str)
+			});
+
+			for (var i = 0; i < twitter_chat.new_live_tweets.length; i++) {
+				twitter_chat.previously_formatted_tweets.push(twitter_chat.new_live_tweets[i]);
 			}
+
+			// if (new_tweets.length) {
+			// 	$('.tweet-list').prepend(JST['pages/index']({'formatted_tweets': new_tweets}))
+			// }
+
+			// if (twitter_chat.formatted_tweets.length > twitter_chat.previously_formatted_tweets.length) {
+			// 	twitter_chat.new_tweet = twitter_chat.formatted_tweets.diff(twitter_chat.previously_formatted_tweets);
+			// 	twitter_chat.formatted_tweets = twitter_chat.new_tweet;
+			// 	console.log(twitter_chat.new_tweet);
+			// 	console.log(twitter_chat.formatted_tweets);
+			// 	console.log(twitter_chat.previously_formatted_tweets);
+			// }
+				// after only the new tweets have been passed through engine, push new tweets onto previous ones
+			// and set that whole new big array as formatted_tweets
+
+			if (twitter_chat.click_counter === 1) {
+				$('.tweet-list').append(JST['pages/index']({'formatted_tweets': twitter_chat.formatted_tweets}));
+			} else if (twitter_chat.click_counter > 1) {
+				$('.tweet-list').prepend(JST['pages/index']({'formatted_tweets': twitter_chat.new_live_tweets}))
+			}
+
+			twitter_chat.previously_formatted_tweets.push(twitter_chat.new_live_tweets);
+			twitter_chat.formatted_tweets = twitter_chat.previously_formatted_tweets;
+
+			// if (twitter_chat.formatted_tweets.length === 1) {
+			// 	twitter_chat.$no_convo_message.appendTo('.tweet-list');
+			// }
 			jQuery("abbr.timeago").timeago();
+
 		}
 	}
 }
+
+// Array.prototype.diff = function(a) {
+//     return this.filter(function(i) {return !(a.indexOf(i) > -1);});
+// };
 
 $(document).ready(function() {
 	twitter_chat.init();
