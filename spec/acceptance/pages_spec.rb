@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-feature "A user can submit a tweet url", do
+feature "A user can submit a tweet url", :js => true do
 	before do
 		visit root_path
 	end
 
-	context "with an invalid url", :js => true do	
+	context "with an invalid url" do	
 		scenario "should respond with an error message" do
 			fill_in "search-query", :with => "https://twitter.com/#!/BeccaGallery/status/1zzzz99156708512243713"
 			click_button "search-button"
@@ -13,9 +13,11 @@ feature "A user can submit a tweet url", do
 		end
 	end
 
-	context "with a valid url", :js => true do
+	context "with a valid url" do
 		scenario "should respond with the conversation" do
-
+			fill_in "search-query", :with => "https://twitter.com/#!/BeccaGallery/status/199156708512243713"
+			click_button "search-button"
+			page.should have_content "Becca Gallery"
 		end
 	end
 end
