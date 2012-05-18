@@ -11,8 +11,6 @@
 		click_counter: 0,
 		getMentionedUserTimelineReceived: 0,
 		twitter_api: "https://api.twitter.com/1/statuses",
-		$no_convo_message: $('<li class="tweet error-message"><p>No conversation exists for this tweet</p></li>'),
-		$error_message: $('<li class="tweet error-message"><p>An error has occurred</p></li>'),
 
 		init: function() {
 			this.bindEvents();
@@ -70,7 +68,7 @@
 				timeout: 10000,
 				error: function() {
 					$('.loading-layer, .loading-icon').hide();
-					tc.$error_message.appendTo('.tweet-list');
+					$('.tweet-list').append(JST['pages/error']());
 				},
 				dataType: "jsonp"
 			});
@@ -85,8 +83,7 @@
 			} else if (user_mentions === 0) {
 				tc.all_tweets.push(response);
 				tc.maybeRenderTweets();
-				// $('.tweet-list').append(JST['pages/noconvo'])();
-				tc.$no_convo_message.appendTo('.tweet-list');
+				$('.tweet-list').append(JST['pages/noconvo']());
 			}
 			tc.getMentionedUserTimeline(tc.original_user_mentions);
 		},
@@ -184,6 +181,9 @@
 				tc.buildContext();
 				$('.loading-layer, .loading-icon').hide();
 				tc.applyProperTweets();
+			if (tc.formatted_tweets.length === 1) {
+				$('.tweet-list').append(JST['pages/noconvo']());
+			}
 				jQuery("abbr.timeago").timeago();
 
 			}
