@@ -1,6 +1,7 @@
 TwitterChat::Application.routes.draw do
   root :to => 'pages#index'
   match '/pages/:id' => 'pages#show'
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
